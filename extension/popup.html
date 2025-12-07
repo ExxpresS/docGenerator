@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workflow Capture</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📊 Workflow Manager</h1>
+      <p class="subtitle">Capture & Sync Workflows</p>
+    </header>
+
+    <main>
+      <!-- Recording Status -->
+      <div id="status" class="status">
+        <div class="status-indicator" id="statusIndicator">
+          <span class="dot"></span>
+          <span id="statusText">Ready</span>
+        </div>
+        <div id="recordingInfo" class="recording-info hidden">
+          <div class="info-item">
+            <span class="label">Workflow:</span>
+            <span id="workflowName">-</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Actions:</span>
+            <span id="actionsCount">0</span>
+          </div>
+          <div class="info-item">
+            <span class="label">States:</span>
+            <span id="statesCount">0</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Duration:</span>
+            <span id="duration">0s</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Start Recording Form -->
+      <div id="startForm" class="form-section">
+        <div class="form-group">
+          <label for="workflowNameInput">Workflow Name</label>
+          <input
+            type="text"
+            id="workflowNameInput"
+            placeholder="e.g., User Registration Flow"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="projectIdInput">Project ID</label>
+          <input
+            type="number"
+            id="projectIdInput"
+            value="1"
+            min="1"
+            required
+          />
+        </div>
+
+        <button id="startBtn" class="btn btn-primary">
+          <span>▶️ Start Recording</span>
+        </button>
+      </div>
+
+      <!-- Stop Recording Actions -->
+      <div id="stopForm" class="form-section hidden">
+        <button id="stopBtn" class="btn btn-danger">
+          <span>⏹️ Stop Recording</span>
+        </button>
+      </div>
+
+      <!-- Workflow Preview -->
+      <div id="workflowPreview" class="workflow-preview hidden">
+        <h3>Captured Workflow</h3>
+        <div class="preview-content">
+          <pre id="workflowJson"></pre>
+        </div>
+        <div class="preview-actions">
+          <button id="syncBtn" class="btn btn-success">
+            <span>🔄 Sync to Server</span>
+          </button>
+          <button id="cancelBtn" class="btn btn-secondary">
+            <span>❌ Discard</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sync Result -->
+      <div id="syncResult" class="hidden">
+        <div class="alert" id="syncAlert"></div>
+      </div>
+
+      <!-- Settings -->
+      <div class="settings-section">
+        <button id="settingsToggle" class="btn-link">⚙️ Settings</button>
+        <div id="settingsPanel" class="settings-panel hidden">
+          <div class="form-group">
+            <label for="apiUrlInput">API URL</label>
+            <input
+              type="text"
+              id="apiUrlInput"
+              placeholder="http://localhost:8001/api/v1"
+            />
+          </div>
+          <button id="saveSettingsBtn" class="btn btn-small">Save Settings</button>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p class="footer-text">Workflow Manager v1.0</p>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
