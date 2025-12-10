@@ -17,6 +17,8 @@ export default defineConfig({
     // Docs: https://github.com/posva/unplugin-vue-router
     // ℹ️ This plugin should be placed before vue plugin
     VueRouter({
+      routesFolder: 'src/pages',
+      dts: './typed-router.d.ts',
       getRouteName: routeNode => {
         // Convert pascal case to kebab case
         return getPascalCaseRouteName(routeNode)

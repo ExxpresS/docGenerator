@@ -1,7 +1,7 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import axios from 'axios'
+import {useRouter} from "vue-router";
+import {onMounted, ref} from "vue";
+import axios from "axios";
 
 definePage({
   meta: {
@@ -17,13 +17,11 @@ const loading = ref(false)
 const dialog = ref(false)
 const deleteDialog = ref(false)
 const viewDialog = ref(false)
-const uploadDialog = ref(false)
 const editMode = ref(false)
 const ragToDelete = ref(null)
 const selectedRag = ref(null)
 const selectedRagDocuments = ref([])
 const selectedRagFiles = ref([])
-const uploadFiles = ref([])
 const search = ref('')
 const tab = ref('documents')
 
@@ -149,46 +147,6 @@ const viewRAG = async (rag) => {
   }
 }
 
-const openUploadDialog = (rag) => {
-  selectedRag.value = rag
-  uploadFiles.value = []
-  uploadDialog.value = true
-}
-
-const handleFileUpload = async () => {
-  if (!uploadFiles.value || uploadFiles.value.length === 0) {
-    showSnackbar('Veuillez sélectionner au moins un fichier', 'error')
-    return
-  }
-
-  const formData = new FormData()
-  for (const file of uploadFiles.value) {
-    formData.append('files', file)
-  }
-
-  try {
-    const response = await axios.post(
-      `${apiUrl}/api/v1/rags/${selectedRag.value.id}/upload`,
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      }
-    )
-
-    showSnackbar(`${response.data.files_processed} fichier(s) uploadé(s)`, 'success')
-    uploadDialog.value = false
-    uploadFiles.value = []
-    await fetchRAGs()
-
-    if (viewDialog.value && selectedRag.value) {
-      await viewRAG(selectedRag.value)
-    }
-  } catch (error) {
-    showSnackbar('Erreur lors de l\'upload des fichiers', 'error')
-    console.error('Error uploading files:', error)
-  }
-}
-
 const indexDocument = async (ragId, documentId) => {
   try {
     await axios.post(`${apiUrl}/api/v1/rags/${ragId}/documents/${documentId}/index`)
@@ -234,7 +192,7 @@ const showSnackbar = (text, color = 'success') => {
 }
 
 const handleRowClick = (event, row) => {
-  router.push({ name: 'rag-detail', params: { id: row.item.id } })
+  router.push({ name: 'rags-id', params: { id: row.item.id } })
 }
 
 onMounted(() => {
@@ -340,21 +298,6 @@ onMounted(() => {
                 location="top"
               >
                 Voir détails
-              </VTooltip>
-            </VBtn>
-            <VBtn
-              icon
-              variant="text"
-              color="success"
-              size="small"
-              @click="openUploadDialog(item)"
-            >
-              <VIcon icon="tabler-upload" />
-              <VTooltip
-                activator="parent"
-                location="top"
-              >
-                Upload fichiers
               </VTooltip>
             </VBtn>
             <VBtn
@@ -501,17 +444,6 @@ onMounted(() => {
             <div class="d-flex gap-2 mt-4">
               <VBtn
                 size="small"
-                color="success"
-                @click="openUploadDialog(selectedRag)"
-              >
-                <VIcon
-                  icon="tabler-upload"
-                  start
-                />
-                Upload fichiers
-              </VBtn>
-              <VBtn
-                size="small"
                 color="primary"
                 @click="indexAllDocuments(selectedRag.id)"
               >
@@ -621,83 +553,6 @@ onMounted(() => {
       </VCard>
     </VDialog>
 
-    <!-- Upload Files Dialog -->
-    <VDialog
-      v-model="uploadDialog"
-      max-width="600"
-    >
-      <VCard>
-        <VCardText>
-          <VBtn
-            icon
-            size="x-small"
-            color="default"
-            variant="text"
-            class="position-absolute"
-            style="inset-block-start: 0.75rem; inset-inline-end: 0.75rem;"
-            @click="uploadDialog = false"
-          >
-            <VIcon
-              size="20"
-              icon="tabler-x"
-            />
-          </VBtn>
-
-          <div class="text-center mb-6">
-            <VAvatar
-              color="success"
-              variant="tonal"
-              size="56"
-              class="mb-3"
-            >
-              <VIcon
-                icon="tabler-upload"
-                size="28"
-              />
-            </VAvatar>
-            <h5 class="text-h5 mb-1">
-              Upload de fichiers
-            </h5>
-            <p class="text-body-2 text-disabled mb-0">
-              Formats acceptés: .txt, .md, .json
-            </p>
-          </div>
-
-          <VFileInput
-            v-model="uploadFiles"
-            label="Sélectionner des fichiers"
-            accept=".txt,.md,.json"
-            multiple
-            chips
-            show-size
-            prepend-icon="tabler-paperclip"
-          />
-
-          <VRow class="mt-4">
-            <VCol cols="6">
-              <VBtn
-                color="secondary"
-                variant="tonal"
-                block
-                @click="uploadDialog = false"
-              >
-                Annuler
-              </VBtn>
-            </VCol>
-            <VCol cols="6">
-              <VBtn
-                color="success"
-                block
-                @click="handleFileUpload"
-              >
-                Upload
-              </VBtn>
-            </VCol>
-          </VRow>
-        </VCardText>
-      </VCard>
-    </VDialog>
-
     <!-- Delete Dialog -->
     <VDialog
       v-model="deleteDialog"
@@ -776,13 +631,3 @@ onMounted(() => {
     </VSnackbar>
   </div>
 </template>
-
-<style scoped>
-.clickable-rows :deep(tbody tr) {
-  cursor: pointer;
-}
-
-.clickable-rows :deep(tbody tr:hover) {
-  background-color: rgba(var(--v-theme-primary), 0.05);
-}
-</style>

@@ -27,7 +27,7 @@ def create_document(
                 content_type, status, metadata
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s)
-            RETURNING id, project_id, workflow_id, title, content,
+            RETURNING id, project_id, rag_id, workflow_id, title, content,
                       content_type, status, is_indexed, metadata, version,
                       created_at, updated_at, validated_at, last_indexed_at, chunks_count
             """,
@@ -217,7 +217,7 @@ def update_document(
             UPDATE documents
             SET {', '.join(update_fields)}
             WHERE id = %s
-            RETURNING id, project_id, workflow_id, title, content,
+            RETURNING id, project_id, rag_id, workflow_id, title, content,
                       content_type, status, is_indexed, metadata, version,
                       created_at, updated_at, validated_at, last_indexed_at, chunks_count
         """

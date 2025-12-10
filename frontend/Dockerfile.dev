@@ -1,0 +1,23 @@
+FROM node:18
+
+WORKDIR /app
+
+# Copier package.json et les lock files
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+
+# Installer les dépendances
+RUN \
+  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+  elif [ -f package-lock.json ]; then npm i --legacy-peer-deps; \
+  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
+
+# Le code sera monté via volume
+# Pas besoin de COPY . .
+
+# Exposer le port Vite
+EXPOSE 5173
+
+# Démarrer Vite en mode dev avec HMR
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

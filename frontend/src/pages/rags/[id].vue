@@ -24,6 +24,11 @@ const editMode = ref(false)
 const loading = ref(false)
 const createDialog = ref(false)
 const newDocTitle = ref('')
+const uploadDialog = ref(false)
+const uploadFiles = ref([])
+const snackbar = ref(false)
+const snackbarText = ref('')
+const snackbarColor = ref('success')
 
 // Fetch RAG details
 const fetchRAG = async () => {
@@ -115,6 +120,50 @@ const indexDocument = async (docId) => {
   }
 }
 
+// Snackbar helper
+const showSnackbar = (text, color = 'success') => {
+  snackbarText.value = text
+  snackbarColor.value = color
+  snackbar.value = true
+}
+
+// Open upload dialog
+const openUploadDialog = () => {
+  uploadFiles.value = []
+  uploadDialog.value = true
+}
+
+// Handle file upload
+const handleFileUpload = async () => {
+  if (!uploadFiles.value || uploadFiles.value.length === 0) {
+    showSnackbar('Veuillez sélectionner au moins un fichier', 'error')
+    return
+  }
+
+  const formData = new FormData()
+  for (const file of uploadFiles.value) {
+    formData.append('files', file)
+  }
+
+  try {
+    const response = await axios.post(
+      `${apiUrl}/api/v1/rags/${ragId}/upload`,
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      }
+    )
+
+    showSnackbar(`${response.data.files_processed} fichier(s) uploadé(s)`, 'success')
+    uploadDialog.value = false
+    uploadFiles.value = []
+    await fetchDocuments()
+  } catch (error) {
+    showSnackbar('Erreur lors de l\'upload des fichiers', 'error')
+    console.error('Error uploading files:', error)
+  }
+}
+
 onMounted(() => {
   fetchRAG()
   fetchDocuments()
@@ -135,16 +184,28 @@ onMounted(() => {
               {{ rag?.description || 'Aucune description' }}
             </p>
           </div>
-          <VBtn
-            color="primary"
-            @click="createDialog = true"
-          >
-            <VIcon
-              start
-              icon="tabler-plus"
-            />
-            Nouveau document
-          </VBtn>
+          <div class="d-flex gap-2">
+            <VBtn
+              color="primary"
+              @click="openUploadDialog"
+            >
+              <VIcon
+                start
+                icon="tabler-upload"
+              />
+              Uploader fichiers
+            </VBtn>
+            <VBtn
+              color="primary"
+              @click="createDialog = true"
+            >
+              <VIcon
+                start
+                icon="tabler-plus"
+              />
+              Nouveau document
+            </VBtn>
+          </div>
         </div>
       </VCardText>
     </VCard>
@@ -317,6 +378,81 @@ onMounted(() => {
         </VCardActions>
       </VCard>
     </VDialog>
+
+    <!-- Upload dialog -->
+    <VDialog
+      v-model="uploadDialog"
+      max-width="600"
+    >
+      <VCard>
+        <VCardTitle>
+          <span class="text-h5">Uploader des fichiers</span>
+        </VCardTitle>
+        <VCardText>
+          <VFileInput
+            v-model="uploadFiles"
+            label="Sélectionnez des fichiers"
+            placeholder="Choisir des fichiers"
+            multiple
+            show-size
+            counter
+            chips
+            prepend-icon="tabler-paperclip"
+            accept=".pdf,.txt,.md,.doc,.docx"
+          >
+            <template #selection="{ fileNames }">
+              <template v-for="fileName in fileNames" :key="fileName">
+                <VChip
+                  label
+                  size="small"
+                  color="primary"
+                  class="me-2"
+                >
+                  {{ fileName }}
+                </VChip>
+              </template>
+            </template>
+          </VFileInput>
+          <VAlert
+            type="info"
+            variant="tonal"
+            class="mt-4"
+          >
+            <small>
+              Formats acceptés : PDF, TXT, MD, DOC, DOCX<br>
+              Les fichiers seront automatiquement indexés dans le RAG
+            </small>
+          </VAlert>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="uploadDialog = false"
+          >
+            Annuler
+          </VBtn>
+          <VBtn
+            color="primary"
+            @click="handleFileUpload"
+            :disabled="!uploadFiles || uploadFiles.length === 0"
+          >
+            <VIcon start icon="tabler-upload" />
+            Uploader
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- Snackbar -->
+    <VSnackbar
+      v-model="snackbar"
+      :color="snackbarColor"
+      :timeout="3000"
+    >
+      {{ snackbarText }}
+    </VSnackbar>
   </div>
 </template>
 

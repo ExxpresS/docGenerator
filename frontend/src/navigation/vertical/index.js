@@ -10,13 +10,13 @@ export default [
     icon: { icon: 'tabler-folder' },
   },
   {
-    title: 'RAG',
-    to: { name: 'rags' },
-    icon: { icon: 'tabler-database' },
-  },
-  {
     title: 'Documents',
     to: { name: 'documents' },
     icon: { icon: 'tabler-file-text' },
+  },
+  {
+    title: 'Rags',
+    to: { name: 'liste-rags' },
+    icon: { icon: 'tabler-flask' },
   },
 ]

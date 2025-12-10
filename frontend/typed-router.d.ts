@@ -20,7 +20,14 @@ declare module 'vue-router/auto-routes' {
   export interface RouteNamedMap {
     'root': RouteRecordInfo<'root', '/', Record<never, never>, Record<never, never>>,
     '$error': RouteRecordInfo<'$error', '/:error(.*)', { error: ParamValue<true> }, { error: ParamValue<false> }>,
+    'dashboard': RouteRecordInfo<'dashboard', '/dashboard', Record<never, never>, Record<never, never>>,
+    'documents': RouteRecordInfo<'documents', '/documents', Record<never, never>, Record<never, never>>,
+    'liste-rags': RouteRecordInfo<'liste-rags', '/liste-rags', Record<never, never>, Record<never, never>>,
     'login': RouteRecordInfo<'login', '/login', Record<never, never>, Record<never, never>>,
+    'projects': RouteRecordInfo<'projects', '/projects', Record<never, never>, Record<never, never>>,
+    'rags-id': RouteRecordInfo<'rags-id', '/rags/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'second-page': RouteRecordInfo<'second-page', '/second-page', Record<never, never>, Record<never, never>>,
+    'workflows': RouteRecordInfo<'workflows', '/workflows', Record<never, never>, Record<never, never>>,
+    'workflows-project-id': RouteRecordInfo<'workflows-project-id', '/workflows/:projectId', { projectId: ParamValue<true> }, { projectId: ParamValue<false> }>,
   }
 }

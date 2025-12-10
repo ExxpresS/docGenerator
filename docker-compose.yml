@@ -31,7 +31,7 @@ services:
     environment:
       DATABASE_URL: postgresql://${DB_USER:-workflow_user}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-workflows_db}
       PROJECT_NAME: ${PROJECT_NAME:-Workflow Manager}
-      DEBUG: ${DEBUG:-false}
+      DEBUG: ${DEBUG:-true}
       API_V1_PREFIX: /api/v1
       BACKEND_CORS_ORIGINS: ${FRONTEND_URL:-http://localhost:3000},http://localhost:5173
 
@@ -52,7 +52,9 @@ services:
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
+      - ./backend/app:/app/app  # HOT-RELOAD: Monte le code source
       - model_cache:/root/.cache
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]  # HOT-RELOAD: Active le reload auto
     depends_on:
       postgres:
         condition: service_healthy
@@ -69,12 +71,15 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_API_BASE_URL: ${BACKEND_URL:-http://localhost:8000}
+      dockerfile: Dockerfile.dev  # HOT-RELOAD: Utilise Vite dev server
     container_name: workflow-frontend
     ports:
-      - "${FRONTEND_PORT:-3000}:80"
+      - "${FRONTEND_PORT:-5173}:5173"  # HOT-RELOAD: Port Vite au lieu de Nginx
+    volumes:
+      - ./frontend:/app  # HOT-RELOAD: Monte le code source
+      - /app/node_modules  # Exclut node_modules (reste dans le conteneur)
+    environment:
+      - VITE_API_BASE_URL=${BACKEND_URL:-http://localhost:8001}
     depends_on:
       - backend
     restart: unless-stopped
