@@ -22,6 +22,7 @@ const selectedDocument = ref(null)
 const editorContent = ref('')
 const editMode = ref(false)
 const loading = ref(false)
+const vectorizing = ref(false)
 const createDialog = ref(false)
 const newDocTitle = ref('')
 const uploadDialog = ref(false)
@@ -51,6 +52,25 @@ const fetchDocuments = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// Get indexation status
+const getIndexationStatus = (doc) => {
+  if (!doc.is_indexed) {
+    return { label: 'Non indexé', color: 'warning' }
+  }
+
+  // Si le document a été modifié après la dernière indexation
+  if (doc.last_indexed_at && doc.updated_at) {
+    const lastIndexed = new Date(doc.last_indexed_at)
+    const lastUpdated = new Date(doc.updated_at)
+
+    if (lastUpdated > lastIndexed) {
+      return { label: 'Modifié', color: 'orange' }
+    }
+  }
+
+  return { label: 'Indexé', color: 'success' }
 }
 
 // Select document
@@ -105,7 +125,15 @@ const saveDocument = async () => {
     }
 
     editMode.value = false
+
+    // Show message if document needs reindexing
+    if (response.data.is_indexed) {
+      showSnackbar('Document sauvegardé. Pensez à le réindexer.', 'info')
+    } else {
+      showSnackbar('Document sauvegardé avec succès', 'success')
+    }
   } catch (error) {
+    showSnackbar('Erreur lors de la sauvegarde', 'error')
     console.error('Error saving document:', error)
   }
 }
@@ -113,9 +141,11 @@ const saveDocument = async () => {
 // Index document
 const indexDocument = async (docId) => {
   try {
-    await axios.post(`${apiUrl}/api/v1/documents/${docId}/index`)
+    await axios.post(`${apiUrl}/api/v1/rags/${ragId}/documents/${docId}/index`)
+    showSnackbar('Document indexé avec succès', 'success')
     await fetchDocuments() // Refresh to show indexed status
   } catch (error) {
+    showSnackbar('Erreur lors de l\'indexation', 'error')
     console.error('Error indexing document:', error)
   }
 }
@@ -164,6 +194,37 @@ const handleFileUpload = async () => {
   }
 }
 
+// Vectorize all documents
+const vectorizeAll = async () => {
+  if (vectorizing.value) return
+
+  vectorizing.value = true
+  try {
+    const response = await axios.post(`${apiUrl}/api/v1/rags/${ragId}/index-all`)
+
+    const { successful, failed, total_documents } = response.data
+
+    if (failed > 0) {
+      showSnackbar(
+        `Vectorisation terminée: ${successful}/${total_documents} documents indexés, ${failed} échecs`,
+        'warning'
+      )
+    } else {
+      showSnackbar(
+        `${successful} document(s) vectorisé(s) avec succès`,
+        'success'
+      )
+    }
+
+    await fetchDocuments()
+  } catch (error) {
+    showSnackbar('Erreur lors de la vectorisation', 'error')
+    console.error('Error vectorizing documents:', error)
+  } finally {
+    vectorizing.value = false
+  }
+}
+
 onMounted(() => {
   fetchRAG()
   fetchDocuments()
@@ -186,7 +247,8 @@ onMounted(() => {
           </div>
           <div class="d-flex gap-2">
             <VBtn
-              color="primary"
+              color="secondary"
+              variant="tonal"
               @click="openUploadDialog"
             >
               <VIcon
@@ -194,6 +256,17 @@ onMounted(() => {
                 icon="tabler-upload"
               />
               Uploader fichiers
+            </VBtn>
+            <VBtn
+              color="info"
+              :loading="vectorizing"
+              @click="vectorizeAll"
+            >
+              <VIcon
+                start
+                icon="tabler-vector"
+              />
+              Vectoriser
             </VBtn>
             <VBtn
               color="primary"
@@ -229,10 +302,10 @@ onMounted(() => {
                 <VListItemSubtitle>
                   <VChip
                     size="x-small"
-                    :color="doc.is_indexed ? 'success' : 'warning'"
+                    :color="getIndexationStatus(doc).color"
                     class="mt-1"
                   >
-                    {{ doc.is_indexed ? 'Indexé' : 'Non indexé' }}
+                    {{ getIndexationStatus(doc).label }}
                   </VChip>
                   <VChip
                     size="x-small"
@@ -244,13 +317,20 @@ onMounted(() => {
                 </VListItemSubtitle>
                 <template v-slot:append>
                   <VBtn
-                    v-if="!doc.is_indexed"
+                    v-if="getIndexationStatus(doc).label !== 'Indexé'"
                     icon
                     size="x-small"
                     variant="text"
+                    color="primary"
                     @click.stop="indexDocument(doc.id)"
                   >
                     <VIcon icon="tabler-database-import" />
+                    <VTooltip
+                      activator="parent"
+                      location="top"
+                    >
+                      {{ getIndexationStatus(doc).label === 'Modifié' ? 'Réindexer' : 'Indexer' }}
+                    </VTooltip>
                   </VBtn>
                 </template>
               </VListItem>
@@ -276,8 +356,31 @@ onMounted(() => {
         <VCard v-if="selectedDocument">
           <VCardTitle>
             <div class="d-flex justify-space-between align-center">
-              <span>{{ selectedDocument.title }}</span>
+              <div class="d-flex align-center gap-2">
+                <span>{{ selectedDocument.title }}</span>
+                <VChip
+                  v-if="getIndexationStatus(selectedDocument).label === 'Modifié'"
+                  size="small"
+                  color="orange"
+                >
+                  Modifié
+                </VChip>
+              </div>
               <div>
+                <VBtn
+                  v-if="!editMode && getIndexationStatus(selectedDocument).label === 'Modifié'"
+                  color="info"
+                  variant="tonal"
+                  size="small"
+                  @click="indexDocument(selectedDocument.id)"
+                  class="mr-2"
+                >
+                  <VIcon
+                    start
+                    icon="tabler-database-import"
+                  />
+                  Réindexer
+                </VBtn>
                 <VBtn
                   v-if="!editMode"
                   color="primary"
@@ -315,6 +418,23 @@ onMounted(() => {
             </div>
           </VCardTitle>
           <VCardText>
+            <VAlert
+              v-if="getIndexationStatus(selectedDocument).label === 'Modifié'"
+              type="warning"
+              variant="tonal"
+              class="mb-4"
+            >
+              <div class="d-flex justify-space-between align-center">
+                <span>Ce document a été modifié depuis sa dernière indexation</span>
+                <VBtn
+                  size="small"
+                  color="warning"
+                  @click="indexDocument(selectedDocument.id)"
+                >
+                  Réindexer maintenant
+                </VBtn>
+              </div>
+            </VAlert>
             <TiptapEditor
               v-if="editMode"
               v-model="editorContent"

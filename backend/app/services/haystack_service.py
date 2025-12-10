@@ -9,6 +9,7 @@ from haystack.components.preprocessors import DocumentSplitter
 from haystack.components.embedders import SentenceTransformersDocumentEmbedder
 from haystack.components.writers import DocumentWriter
 from haystack_integrations.document_stores.pgvector import PgvectorDocumentStore
+
 from app.config import settings
 import logging
 
@@ -184,26 +185,23 @@ class HaystackService:
             'indexed_at': end_time.isoformat()
         }
 
-    @staticmethod
-    def delete_document_from_index(document_id: int) -> int:
-        """
-        Delete all chunks of a document from the vector store
-
-        Args:
-            document_id: ID of the document to remove
-
-        Returns:
-            Number of chunks deleted
-        """
+    @classmethod
+    def delete_document_from_index(cls, document_id: int) -> int:
+        # appeler la fonction module-level, pas cls.get_document_store()
         document_store = get_document_store()
 
-        # Delete by metadata filter
-        deleted_count = document_store.delete_documents(
-            filters={"field": "document_id", "operator": "==", "value": document_id}
-        )
+        all_docs = document_store.get_all_documents(index=document_store.index)
+        ids_to_delete = [
+            doc.id
+            for doc in all_docs
+            if doc.metadata.get("document_id") == document_id
+        ]
+        if not ids_to_delete:
+            return 0
 
-        logger.info(f"Deleted {deleted_count} chunks for document {document_id}")
+        deleted_count = document_store.delete_documents(ids=ids_to_delete)
         return deleted_count
+
 
     @staticmethod
     def search_documents(

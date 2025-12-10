@@ -282,6 +282,7 @@ def create_rag_document(rag_id: int, document: dict):
 def index_document(rag_id: int, document_id: int):
     """
     Index a document using Haystack: chunk content and generate embeddings
+    If document was already indexed, deletes old chunks and re-indexes
     """
     # Verify document belongs to RAG
     document = doc_queries.get_document_by_id(document_id)
@@ -298,6 +299,11 @@ def index_document(rag_id: int, document_id: int):
         )
 
     try:
+        # If document was already indexed, delete old chunks first
+        if document.get('is_indexed', False):
+            deleted_count = HaystackService.delete_document_from_index(document_id)
+            print(f"Deleted {deleted_count} old chunks for document {document_id}")
+
         # Index using Haystack
         result = HaystackService.index_document(
             document_id=document_id,
@@ -329,6 +335,7 @@ def index_document(rag_id: int, document_id: int):
 def index_all_rag_documents(rag_id: int):
     """
     Index all documents in a RAG using Haystack
+    Deletes existing chunks and re-indexes all documents
     """
     rag = rag_queries.get_rag_by_id(rag_id)
     if not rag:
@@ -342,6 +349,12 @@ def index_all_rag_documents(rag_id: int):
     results = []
     for doc in documents:
         try:
+            # If document was already indexed, delete old chunks first
+            if doc.get('is_indexed', False):
+                deleted_count = HaystackService.delete_document_from_index(doc['id'])
+                print(f"Deleted {deleted_count} old chunks for document {doc['id']}")
+
+            # Index document
             result = HaystackService.index_document(
                 document_id=doc['id'],
                 title=doc['title'],
@@ -363,7 +376,7 @@ def index_all_rag_documents(rag_id: int):
             results.append({
                 'document_id': doc['id'],
                 'status': 'success',
-                **result
+                'chunks_created': result['chunks_created']
             })
         except Exception as e:
             results.append({
@@ -372,9 +385,14 @@ def index_all_rag_documents(rag_id: int):
                 'error': str(e)
             })
 
+    successful = len([r for r in results if r['status'] == 'success'])
+    failed = len([r for r in results if r['status'] == 'error'])
+
     return {
         'rag_id': rag_id,
         'total_documents': len(documents),
+        'successful': successful,
+        'failed': failed,
         'results': results
     }
 

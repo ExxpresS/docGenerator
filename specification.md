@@ -1,3 +1,9 @@
+todo : 
+index all -> reindex que les modifiés 
+llm ajouter un agent avec connexion à un ollama / lm studio
+chat llm connecté aux rag 
+
+
 Déploiement Clé en Main - De Dev Local → Serveur Production
 🎯 Objectif
 Setup local dev → Package déployable facilement → Installation simple au travail
