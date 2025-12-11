@@ -325,7 +325,7 @@ DB_PORT=5433
 DEFAULT_LLM_PROVIDER=ollama  # or "openai" or "anthropic"
 
 # If using Ollama (local, free)
-OLLAMA_MODEL=llama3.2:3b  # or qwen2.5:7b, mistral:7b
+OLLAMA_MODEL=qwen3:4b  # or qwen2.5:7b, mistral:7b
 
 # If using OpenAI
 OPENAI_API_KEY=sk-...

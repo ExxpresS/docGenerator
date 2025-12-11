@@ -33,8 +33,9 @@ def root():
 
 
 # Include routers
-from app.api.v1 import projects, workflows, documents, rags
+from app.api.v1 import projects, workflows, documents, rags, chat
 app.include_router(projects.router, prefix=f"{settings.API_V1_PREFIX}/projects", tags=["projects"])
 app.include_router(workflows.router, prefix=f"{settings.API_V1_PREFIX}/workflows", tags=["workflows"])
 app.include_router(documents.router, prefix=f"{settings.API_V1_PREFIX}/documents", tags=["documents"])
 app.include_router(rags.router, prefix=f"{settings.API_V1_PREFIX}/rags", tags=["rags"])
+app.include_router(chat.router, prefix=f"{settings.API_V1_PREFIX}/chat", tags=["chat"])

@@ -16,7 +16,7 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 RUN \
   if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm i --legacy-peer-deps; \
+  elif [ -f package-lock.json ]; then npm install --force; \
   elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
   else echo "Lockfile not found." && exit 1; \
   fi

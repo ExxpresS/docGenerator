@@ -22,7 +22,7 @@ sentence-transformers==3.3.0
 torch==2.5.1
 pandas==2.2.3  # Required by pgvector-haystack
 
-# Future LLM integrations
+# LLM integrations
+openai>=1.99.2  # For LM Studio OpenAI-compatible API (compatible with haystack-ai)
 # ollama-haystack
-# openai
 # anthropic

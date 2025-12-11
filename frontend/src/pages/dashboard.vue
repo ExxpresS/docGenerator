@@ -15,6 +15,7 @@ const workflowsCount = ref(0)
 const documentsCount = ref(0)
 const loading = ref(true)
 
+console.log(import.meta.env.VITE_API_BASE_URL)
 const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001'
 
 onMounted(async () => {

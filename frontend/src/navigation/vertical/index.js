@@ -19,4 +19,9 @@ export default [
     to: { name: 'liste-rags' },
     icon: { icon: 'tabler-flask' },
   },
+  {
+    title: 'Chat IA',
+    to: { name: 'chat-ai' },
+    icon: { icon: 'tabler-message-chatbot' },
+  },
 ]
